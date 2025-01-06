@@ -20,7 +20,7 @@ blueprint = Blueprint("routes", __name__)
 
 @blueprint.route("/")
 def home():
-    return f"<h1>Welcome to DeepFace API v{DeepFace.__version__}!</h1>"
+    return f"<h1>Welcome to DeepFace YOLO API v{DeepFace.__version__}!</h1>"
 
 
 def extract_image_from_request(img_key: str) -> Union[str, np.ndarray]:
@@ -166,3 +166,52 @@ def analyze():
     logger.debug(demographies)
 
     return demographies
+
+@blueprint.route("/embedding", methods=["POST"])
+def compute_embedding_endpoint():
+    """
+    Endpoint to compute embeddings for all detected faces in an image.
+
+    Expects:
+        - 'img' in multipart/form-data or JSON as a base64 string, file path, or URL.
+
+    Optional Parameters:
+        - model_name: The face recognition model to use (default: "Facenet512").
+        - detector_backend: Backend for face detection (default: "fastmtcnn").
+        - enforce_detection: Whether to enforce face detection (default: False).
+        - align: Whether to align faces (default: False).
+        - anti_spoofing: Whether to perform anti-spoofing (default: False).
+
+    Returns:
+        JSON response containing embeddings and facial areas or error information.
+    """
+    input_args = (request.is_json and request.get_json()) or (
+        request.form and request.form.to_dict()
+    )
+
+    try:
+        img = extract_image_from_request("img")
+    except Exception as err:
+        return {"exception": str(err)}, 400
+
+    model_name = input_args.get("model_name", "Facenet512")
+    detector_backend = input_args.get("detector_backend", "fastmtcnn")
+    enforce_detection = input_args.get("enforce_detection", False)
+    align = input_args.get("align", False)
+    anti_spoofing = input_args.get("anti_spoofing", False)
+
+    response, status = service.compute_embedding(
+        img_path=img,
+        model_name=model_name,
+        detector_backend=detector_backend,
+        enforce_detection=enforce_detection,
+        align=align,
+        anti_spoofing=anti_spoofing
+    )
+
+    if status != 200:
+        return response, status
+
+    logger.debug(response)
+
+    return response, 200
