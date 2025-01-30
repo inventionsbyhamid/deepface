@@ -195,7 +195,7 @@ def compute_embedding_endpoint():
         return {"exception": str(err)}, 400
 
     model_name = input_args.get("model_name", "Facenet512")
-    detector_backend = input_args.get("detector_backend", "fastmtcnn")
+    detector_backend = input_args.get("detector_backend", "retinaface")
     enforce_detection = input_args.get("enforce_detection", False)
     align = input_args.get("align", False)
     anti_spoofing = input_args.get("anti_spoofing", False)
